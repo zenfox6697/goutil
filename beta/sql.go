@@ -9,7 +9,8 @@ import (
 	"reflect"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	// _ "github.com/go-sql-driver/mysql"
+	_ "github.com/mailru/go-clickhouse"
 )
 
 type SQL struct {
