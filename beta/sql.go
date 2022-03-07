@@ -1,4 +1,6 @@
 // test for clickhouse use
+// work: insert, query
+// not work: delete, update
 package beta
 
 import (
