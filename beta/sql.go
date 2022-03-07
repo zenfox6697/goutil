@@ -1,3 +1,4 @@
+// test for clickhouse use
 package beta
 
 import (
@@ -79,12 +80,13 @@ func (m *SQL) InsertBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
 	if result == nil {
 		return -1
 	}
-	id, err := result.LastInsertId()
-	if err != nil {
-		log.Println(err)
-		return -1
-	}
-	return id
+	// id, err := result.LastInsertId()
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return -1
+	// }
+	// return id
+	return 0
 }
 
 //批量新增
@@ -132,17 +134,19 @@ func (m *SQL) insertOrReplaceBatchByTx(tx *sql.Tx, tp string, afterInsert, table
 	if result == nil {
 		return -1, -1
 	}
-	v1, e1 := result.RowsAffected()
+	// v1, e1 := result.RowsAffected()
+	_, e1 := result.RowsAffected()
 	if e1 != nil {
 		log.Println(e1)
 		return -1, -1
 	}
-	v2, e2 := result.LastInsertId()
-	if e2 != nil {
-		log.Println(e2)
-		return -1, -1
-	}
-	return v1, v2
+	// v2, e2 := result.LastInsertId()
+	// if e2 != nil {
+	// 	log.Println(e2)
+	// 	return -1, -1
+	// }
+	// return v1, v2
+	return 0, 0
 }
 
 //sql语句执行
