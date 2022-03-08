@@ -23,6 +23,14 @@ type SQL struct {
 	// MaxIdleConns int     //用于设置闲置的连接数。
 }
 
+func NewCHConn(url string) *SQL {
+	db, err := sql.Open("clickhouse", url)
+	if err != nil {
+		log.Println(err)
+	}
+	return &SQL{DB: db}
+}
+
 // func (m *Mysql) Init() {
 // 	if m.MaxOpenConns <= 0 {
 // 		m.MaxOpenConns = 30
