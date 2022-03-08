@@ -371,7 +371,9 @@ func (m *SQL) DeleteByTx(tx *sql.Tx, tableName string, query map[string]interfac
 		fields = append(fields, fmt.Sprintf("%s=?", k))
 		values = append(values, v)
 	}
-	q := fmt.Sprintf("delete from %s where %s", tableName, strings.Join(fields, " and "))
+	// q := fmt.Sprintf("delete from %s where %s", tableName, strings.Join(fields, " and "))
+	//optmize for CH
+	q := fmt.Sprintf("ALTER TABLE %s DELETE WHERE %s;", tableName, strings.Join(fields, " AND "))
 	log.Println(q, values)
 	return m.UpdateOrDeleteBySqlByTx(tx, q, values...) > 0
 }
