@@ -74,7 +74,7 @@ func (m *SQL) InsertByTx(tx *sql.Tx, tableName string, data map[string]interface
 		placeholders = append(placeholders, "?")
 	}
 	q := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(fields, ","), strings.Join(placeholders, ","))
-	log.Println("mysql", q, values)
+	log.Println("ClickHouse", q, values)
 	return m.InsertBySqlByTx(tx, q, values...)
 }
 
