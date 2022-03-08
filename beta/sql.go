@@ -1,4 +1,4 @@
-// test for clickhouse use
+// test for clickhouse use v0.3
 package beta
 
 import (
