@@ -1,6 +1,4 @@
 // test for clickhouse use
-// work: insert, query
-// not work: delete, update
 package beta
 
 import (
@@ -355,7 +353,8 @@ func (m *SQL) UpdateByTx(tx *sql.Tx, tableName string, query, update map[string]
 		u_fs = append(u_fs, fmt.Sprintf("%s=?", k))
 		values = append(values, v)
 	}
-	q := fmt.Sprintf("update %s set %s where %s", tableName, strings.Join(q_fs, ","), strings.Join(u_fs, " and "))
+	// optmize for clickhouse
+	q := fmt.Sprintf("ALTER TABLE %s UPDATE %s WHERE %s;", tableName, strings.Join(q_fs, ","), strings.Join(u_fs, " and "))
 	log.Println(q, values)
 	return m.UpdateOrDeleteBySqlByTx(tx, q, values...) >= 0
 }
