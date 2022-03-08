@@ -29,7 +29,7 @@ func (l *level) PutString(k, v string) {
 }
 
 func (l *level) GetString(k string) string {
-	v, err := l.DB.Get([]byte(k), nil)
+	v, err := l.DB.Get([]byte(l.Key+k), nil)
 	if err != nil {
 		log.Println(err)
 	}
