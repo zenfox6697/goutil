@@ -9,6 +9,7 @@ require (
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/mailru/go-clickhouse v1.8.0
+	github.com/syndtr/goleveldb v1.0.0
 	github.com/xlzd/gotp v0.0.0-20220110052318-fab697c03c2c
 	go.mongodb.org/mongo-driver v1.8.4
 	gopkg.in/irc.v3 v3.1.4
