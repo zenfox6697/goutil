@@ -13,7 +13,7 @@ import (
 	_ "github.com/mailru/go-clickhouse"
 )
 
-type SQL struct {
+type Click struct {
 	// Address      string  //数据库地址:端口
 	// UserName     string  //用户名
 	// PassWord     string  //密码
@@ -23,43 +23,31 @@ type SQL struct {
 	// MaxIdleConns int     //用于设置闲置的连接数。
 }
 
-func NewCHConn(url string) *SQL {
+var CH *Click
+
+func NewCHConn(url string) *Click {
 	db, err := sql.Open("clickhouse", url)
 	if err != nil {
 		log.Println(err)
 	}
-	return &SQL{DB: db}
+	return &Click{DB: db}
 }
 
-// func (m *Mysql) Init() {
-// 	if m.MaxOpenConns <= 0 {
-// 		m.MaxOpenConns = 30
-// 	}
-// 	if m.MaxIdleConns <= 0 {
-// 		m.MaxIdleConns = 6
-// 	}
-// 	var err error
-// 	m.DB, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4", m.UserName, m.PassWord, m.Address, m.DBName))
-// 	if err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-// 	m.DB.SetMaxOpenConns(m.MaxOpenConns)
-// 	m.DB.SetMaxIdleConns(m.MaxIdleConns)
-// 	m.DB.SetConnMaxLifetime(14400 * time.Second)
-// 	err = m.DB.Ping()
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-// }
+func InitDefaultCH(url string) {
+	db, err := sql.Open("clickhouse", url)
+	if err != nil {
+		log.Println(err)
+	}
+	*CH = Click{DB: db}
+}
 
 //新增
-func (m *SQL) Insert(tableName string, data map[string]interface{}) int64 {
+func (m *Click) Insert(tableName string, data map[string]interface{}) int64 {
 	return m.InsertByTx(nil, tableName, data)
 }
 
-//带有事务的新增
-func (m *SQL) InsertByTx(tx *sql.Tx, tableName string, data map[string]interface{}) int64 {
+//带有事务的新增 ClickHouse无事务,wrapper only
+func (m *Click) InsertByTx(tx *sql.Tx, tableName string, data map[string]interface{}) int64 {
 	fields := []string{}
 	values := []interface{}{}
 	placeholders := []string{}
@@ -79,12 +67,12 @@ func (m *SQL) InsertByTx(tx *sql.Tx, tableName string, data map[string]interface
 }
 
 //sql语句新增
-func (m *SQL) InsertBySql(q string, args ...interface{}) int64 {
+func (m *Click) InsertBySql(q string, args ...interface{}) int64 {
 	return m.InsertBySqlByTx(nil, q, args...)
 }
 
 //带有事务的sql语句新增
-func (m *SQL) InsertBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
+func (m *Click) InsertBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
 	result, _ := m.ExecBySqlByTx(tx, q, args...)
 	if result == nil {
 		return -1
@@ -99,36 +87,36 @@ func (m *SQL) InsertBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
 }
 
 //批量新增
-func (m *SQL) InsertIgnoreBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) InsertIgnoreBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.InsertIgnoreBatchByTx(nil, tableName, fields, values)
 }
 
 //带事务的批量新增
-func (m *SQL) InsertIgnoreBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) InsertIgnoreBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.insertOrReplaceBatchByTx(tx, "INSERT", "IGNORE", tableName, fields, values)
 }
 
 //批量新增
-func (m *SQL) InsertBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) InsertBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.InsertBatchByTx(nil, tableName, fields, values)
 }
 
 //带事务的批量新增
-func (m *SQL) InsertBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) InsertBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.insertOrReplaceBatchByTx(tx, "INSERT", "", tableName, fields, values)
 }
 
 //批量更新
-func (m *SQL) ReplaceBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) ReplaceBatch(tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.ReplaceBatchByTx(nil, tableName, fields, values)
 }
 
 //带事务的批量更新
-func (m *SQL) ReplaceBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) ReplaceBatchByTx(tx *sql.Tx, tableName string, fields []string, values []interface{}) (int64, int64) {
 	return m.insertOrReplaceBatchByTx(tx, "REPLACE", "", tableName, fields, values)
 }
 
-func (m *SQL) insertOrReplaceBatchByTx(tx *sql.Tx, tp string, afterInsert, tableName string, fields []string, values []interface{}) (int64, int64) {
+func (m *Click) insertOrReplaceBatchByTx(tx *sql.Tx, tp string, afterInsert, tableName string, fields []string, values []interface{}) (int64, int64) {
 	placeholders := []string{}
 	for range fields {
 		placeholders = append(placeholders, "?")
@@ -159,12 +147,12 @@ func (m *SQL) insertOrReplaceBatchByTx(tx *sql.Tx, tp string, afterInsert, table
 }
 
 //sql语句执行
-func (m *SQL) ExecBySql(q string, args ...interface{}) (sql.Result, error) {
+func (m *Click) ExecBySql(q string, args ...interface{}) (sql.Result, error) {
 	return m.ExecBySqlByTx(nil, q, args...)
 }
 
 //sql语句执行,带有事务
-func (m *SQL) ExecBySqlByTx(tx *sql.Tx, q string, args ...interface{}) (sql.Result, error) {
+func (m *Click) ExecBySqlByTx(tx *sql.Tx, q string, args ...interface{}) (sql.Result, error) {
 	var stmtIns *sql.Stmt
 	var err error
 	if tx == nil {
@@ -190,7 +178,7 @@ func (m *SQL) ExecBySqlByTx(tx *sql.Tx, q string, args ...interface{}) (sql.Resu
  *字段为空 map[string]string{"name":"$isNull"}
  *字段不为空 map[string]string{"name":"$isNotNull"}
  */
-func (m *SQL) Find(tableName string, query map[string]interface{}, fields, order string, start, pageSize int) *[]map[string]interface{} {
+func (m *Click) Find(tableName string, query map[string]interface{}, fields, order string, start, pageSize int) *[]map[string]interface{} {
 	fs := []string{}
 	vs := []interface{}{}
 	for k, v := range query {
@@ -264,13 +252,13 @@ func (m *SQL) Find(tableName string, query map[string]interface{}, fields, order
 }
 
 //sql语句查询
-func (m *SQL) SelectBySql(q string, args ...interface{}) *[]map[string]interface{} {
+func (m *Click) SelectBySql(q string, args ...interface{}) *[]map[string]interface{} {
 	return m.SelectBySqlByTx(nil, q, args...)
 }
-func (m *SQL) SelectBySqlByTx(tx *sql.Tx, q string, args ...interface{}) *[]map[string]interface{} {
+func (m *Click) SelectBySqlByTx(tx *sql.Tx, q string, args ...interface{}) *[]map[string]interface{} {
 	return m.Select(0, nil, tx, q, args...)
 }
-func (m *SQL) Select(bath int, f func(l *[]map[string]interface{}), tx *sql.Tx, q string, args ...interface{}) *[]map[string]interface{} {
+func (m *Click) Select(bath int, f func(l *[]map[string]interface{}), tx *sql.Tx, q string, args ...interface{}) *[]map[string]interface{} {
 	var stmtOut *sql.Stmt
 	var err error
 	if tx == nil {
@@ -328,13 +316,13 @@ func (m *SQL) Select(bath int, f func(l *[]map[string]interface{}), tx *sql.Tx, 
 	}
 	return &list
 }
-func (m *SQL) SelectByBath(bath int, f func(l *[]map[string]interface{}), q string, args ...interface{}) {
+func (m *Click) SelectByBath(bath int, f func(l *[]map[string]interface{}), q string, args ...interface{}) {
 	m.SelectByBathByTx(bath, f, nil, q, args...)
 }
-func (m *SQL) SelectByBathByTx(bath int, f func(l *[]map[string]interface{}), tx *sql.Tx, q string, args ...interface{}) {
+func (m *Click) SelectByBathByTx(bath int, f func(l *[]map[string]interface{}), tx *sql.Tx, q string, args ...interface{}) {
 	m.Select(bath, f, tx, q, args...)
 }
-func (m *SQL) FindOne(tableName string, query map[string]interface{}, fields, order string) *map[string]interface{} {
+func (m *Click) FindOne(tableName string, query map[string]interface{}, fields, order string) *map[string]interface{} {
 	list := m.Find(tableName, query, fields, order, 0, 1)
 	if list != nil && len(*list) == 1 {
 		temp := (*list)[0]
@@ -344,12 +332,12 @@ func (m *SQL) FindOne(tableName string, query map[string]interface{}, fields, or
 }
 
 //修改
-func (m *SQL) Update(tableName string, query, update map[string]interface{}) bool {
+func (m *Click) Update(tableName string, query, update map[string]interface{}) bool {
 	return m.UpdateByTx(nil, tableName, query, update)
 }
 
 //带事务的修改
-func (m *SQL) UpdateByTx(tx *sql.Tx, tableName string, query, update map[string]interface{}) bool {
+func (m *Click) UpdateByTx(tx *sql.Tx, tableName string, query, update map[string]interface{}) bool {
 	q_fs := []string{}
 	u_fs := []string{}
 	values := []interface{}{}
@@ -368,10 +356,10 @@ func (m *SQL) UpdateByTx(tx *sql.Tx, tableName string, query, update map[string]
 }
 
 //删除
-func (m *SQL) Delete(tableName string, query map[string]interface{}) bool {
+func (m *Click) Delete(tableName string, query map[string]interface{}) bool {
 	return m.DeleteByTx(nil, tableName, query)
 }
-func (m *SQL) DeleteByTx(tx *sql.Tx, tableName string, query map[string]interface{}) bool {
+func (m *Click) DeleteByTx(tx *sql.Tx, tableName string, query map[string]interface{}) bool {
 	fields := []string{}
 	values := []interface{}{}
 	for k, v := range query {
@@ -386,12 +374,12 @@ func (m *SQL) DeleteByTx(tx *sql.Tx, tableName string, query map[string]interfac
 }
 
 //修改或删除
-func (m *SQL) UpdateOrDeleteBySql(q string, args ...interface{}) int64 {
+func (m *Click) UpdateOrDeleteBySql(q string, args ...interface{}) int64 {
 	return m.UpdateOrDeleteBySqlByTx(nil, q, args...)
 }
 
 //带事务的修改或删除
-func (m *SQL) UpdateOrDeleteBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
+func (m *Click) UpdateOrDeleteBySqlByTx(tx *sql.Tx, q string, args ...interface{}) int64 {
 	result, err := m.ExecBySqlByTx(tx, q, args...)
 	if err != nil {
 		log.Println(err)
@@ -406,7 +394,7 @@ func (m *SQL) UpdateOrDeleteBySqlByTx(tx *sql.Tx, q string, args ...interface{})
 }
 
 //总数
-func (m *SQL) Count(tableName string, query map[string]interface{}) int64 {
+func (m *Click) Count(tableName string, query map[string]interface{}) int64 {
 	fields := []string{}
 	values := []interface{}{}
 	for k, v := range query {
@@ -456,7 +444,7 @@ func (m *SQL) Count(tableName string, query map[string]interface{}) int64 {
 	log.Println(q, values)
 	return m.CountBySql(q, values...)
 }
-func (m *SQL) CountBySql(q string, args ...interface{}) int64 {
+func (m *Click) CountBySql(q string, args ...interface{}) int64 {
 	stmtIns, err := m.DB.Prepare(q)
 	if err != nil {
 		log.Println(err)
@@ -483,7 +471,7 @@ func (m *SQL) CountBySql(q string, args ...interface{}) int64 {
 }
 
 //执行事务
-func (m *SQL) ExecTx(msg string, f func(tx *sql.Tx) bool) bool {
+func (m *Click) ExecTx(msg string, f func(tx *sql.Tx) bool) bool {
 	tx, err := m.DB.Begin()
 	if err != nil {
 		log.Println(msg, "获取事务错误", err)
@@ -504,11 +492,11 @@ func (m *SQL) ExecTx(msg string, f func(tx *sql.Tx) bool) bool {
 }
 
 /*************方法命名不规范，上面有替代方法*************/
-func (m *SQL) Query(query string, args ...interface{}) *[]map[string]interface{} {
+func (m *Click) Query(query string, args ...interface{}) *[]map[string]interface{} {
 	return m.SelectBySql(query, args...)
 }
 
-func (m *SQL) QueryCount(query string, args ...interface{}) (count int) {
+func (m *Click) QueryCount(query string, args ...interface{}) (count int) {
 	count = -1
 	if !strings.Contains(strings.ToLower(query), "count(*)") {
 		fmt.Println("QueryCount need query like < select count(*) from ..... >")
