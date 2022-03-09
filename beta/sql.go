@@ -14,13 +14,7 @@ import (
 )
 
 type Click struct {
-	// Address      string  //数据库地址:端口
-	// UserName     string  //用户名
-	// PassWord     string  //密码
-	// DBName       string  //数据库名
 	DB *sql.DB //数据库连接池对象
-	// MaxOpenConns int     //用于设置最大打开的连接数，默认值为0表示不限制。
-	// MaxIdleConns int     //用于设置闲置的连接数。
 }
 
 var CH *Click
@@ -38,7 +32,7 @@ func InitDefaultCH(url string) {
 	if err != nil {
 		log.Println(err)
 	}
-	*CH = Click{DB: db}
+	CH = &Click{DB: db}
 }
 
 //新增
