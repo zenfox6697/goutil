@@ -1,4 +1,4 @@
-module goutil
+module github.com/zenfox6697/goutil
 
 go 1.17
 
